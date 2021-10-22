@@ -1,169 +1,109 @@
 <#@ template language="C#" #>
 <#@ output extension=".cs" #>
 <#@ assembly name="System.Core" #>
-<# Type[] types = new[] {
-    typeof(Int16), typeof(Int32), typeof(Int64),
-    typeof(float), typeof(double), typeof(decimal),
+<# var types = new System.Collections.Generic.Dictionary<string, string>
+    {
+        ["int"] = "Int",
+        ["float"] = "Float",
     };
 #>
 using System;
 
 namespace HexGrid
 {
-    public readonly partial struct Hex<T>
-        where T : struct
+<#  foreach (var (small, large) in types) { #>
+    public readonly partial struct Hex<#= large #> : IEquatable<Hex<#= large #>>
     {
-<#      foreach (var type in types) { 
-        #>
-        /// <summary>
-        /// Add two <see cref="Hex<T>" /> coordinates together.
-        /// </summary>
-        /// <param name="val1">first coordinate</param>
-        /// <param name="val2">second coordinate</param>
-        /// <returns>result coordinate</returns>
-        public static Hex<<#= type.Name #>> Add(Hex<<#= type.Name #>> val1, Hex<<#= type.Name #>> val2) 
+        public <#= small #> X { get; }
+
+        public <#= small #> Y { get; }
+
+        public <#= small #> Z { get; }
+
+        public Hex<#= large #>(<#= small #> x, <#= small #> y, <#= small #> z)
+            => (X, Y, Z) = (x, y, z);
+        
+        public override bool Equals(object obj)
         {
-            return new Hex<<#= type.Name #>>(
-                (<#= type.Name #>)(val1.X + val2.X),
-                (<#= type.Name #>)(val1.Y + val2.Y),
-                (<#= type.Name #>)(val1.Z + val2.Z)
-            );
+            return obj is Hex<#= large #> val && Equals(val);
         }
-<#
-        } #>
-<#      foreach (var type in types) { 
-        #>
-        /// <summary>
-        /// Subtract the second <see cref="Hex<T>" /> coordinate from the first.
-        /// </summary>
-        /// <param name="val1">first coordinate</param>
-        /// <param name="val2">second coordinate</param>
-        /// <returns>result coordinate</returns>
-        public static Hex<<#= type.Name #>> Sub(Hex<<#= type.Name #>> val1, Hex<<#= type.Name #>> val2) 
+
+        public bool Equals(Hex<#= large #> other)
         {
-            return new Hex<<#= type.Name #>>(
-                (<#= type.Name #>)(val1.X - val2.X),
-                (<#= type.Name #>)(val1.Y - val2.Y),
-                (<#= type.Name #>)(val1.Z - val2.Z)
-            );
+            return X == other.X &&
+                   Y == other.Y &&
+                   Z == other.Z;
         }
-<#
-        } #>
-<#      foreach (var type in types) { 
-        #>
-        /// <summary>
-        /// Negates a <see cref="Hex<T>" /> coordinates.
-        /// </summary>
-        /// <param name="val">coordinate</param>
-        /// <returns>result coordinate</returns>
-        public static Hex<<#= type.Name #>> Negate(Hex<<#= type.Name #>> val) 
+
+        public override int GetHashCode()
         {
-            return new Hex<<#= type.Name #>>(
-                (<#= type.Name #>)(-val.X),
-                (<#= type.Name #>)(-val.Y),
-                (<#= type.Name #>)(-val.Z)
-            );
+            return HashCode.Combine(X, Y, Z);
         }
-<#
-        } #>
-<#      foreach (var type in types) { 
-        #>
-        /// <summary>
-        /// Negates a <see cref="Hex<T>" /> coordinates.
-        /// </summary>
-        /// <param name="val">coordinate</param>
-        /// <param name="scale">scale factor</param>
-        /// <returns>result coordinate</returns>
-        public static Hex<<#= type.Name #>> Scale(Hex<<#= type.Name #>> val, <#= type.Name #> scale) 
+
+        public (<#= small #> q, <#= small #> r) ToAxial()
+            => (X, Z);
+
+        public static Hex<#= large #> FromAxial(<#= small #> q, <#= small #> r)
+            => new Hex<#= large #>(q, 0 - q - r, r);
+        
+
+        public static Hex<#= large #> FromAxial((<#= small #> q, <#= small #> r) p)
+            => FromAxial(p.q, p.r);
+        
+        public (<#= small #> col, <#= small #> row) ToDoubled(DoubledCoordinateSystem system)
         {
-            return new Hex<<#= type.Name #>>(
-                (<#= type.Name #>)(val.X * scale),
-                (<#= type.Name #>)(val.Y * scale),
-                (<#= type.Name #>)(val.Z * scale)
-            );
+            return system switch
+            {
+                DoubledCoordinateSystem.DoubleHeight => (X, 2 * Z + X),
+                DoubledCoordinateSystem.DoubleWidth => (2 * X + Z, Z),
+                _ => throw new NotImplementedException(),
+            };
         }
-<#
-        } #>
-<#      foreach (var type in types) { 
-        #>
-        /// <summary>
-        /// Check if two <see cref="Hex<T>" /> are equal.
-        /// </summary>
-        /// <param name="val1">first coordinate</param>
-        /// <param name="val2">second coordinate</param>
-        /// <returns>comparison result</returns>
-        public static bool Equal(Hex<<#= type.Name #>> val1, Hex<<#= type.Name #>> val2) 
+
+        public static Hex<#= large #> FromDoubled(<#= small #> col, <#= small #> row, DoubledCoordinateSystem system)
         {
-            return val1.X == val2.X 
-                && val1.Y == val2.Y 
-                && val1.Z == val2.Z;
+            return system switch
+            {
+                DoubledCoordinateSystem.DoubleHeight => FromAxial(col, (row - col) / 2),
+                DoubledCoordinateSystem.DoubleWidth => FromAxial((col - row) / 2, row),
+                _ => throw new NotImplementedException(),
+            };
         }
-<#
-        } #>
-<#      foreach (var type in types) { 
-        #>
-        /// <summary>
-        /// Check if the first <see cref="Hex<T>" /> is less than the second.
-        /// </summary>
-        /// <param name="val1">first coordinate</param>
-        /// <param name="val2">second coordinate</param>
-        /// <returns>comparison result</returns>
-        public static bool Less(Hex<<#= type.Name #>> val1, Hex<<#= type.Name #>> val2) 
-        {
-            return val1.X < val2.X 
-                && val1.Y < val2.Y 
-                && val1.Z < val2.Z;
-        }
-<#
-        } #>
-<#      foreach (var type in types) { 
-        #>
-        /// <summary>
-        /// Check if the first <see cref="Hex<T>" /> is less or equal than the second.
-        /// </summary>
-        /// <param name="val1">first coordinate</param>
-        /// <param name="val2">second coordinate</param>
-        /// <returns>comparison result</returns>
-        public static bool LessOrEqual(Hex<<#= type.Name #>> val1, Hex<<#= type.Name #>> val2) 
-        {
-            return val1.X <= val2.X 
-                && val1.Y <= val2.Y 
-                && val1.Z <= val2.Z;
-        }
-<#
-        } #>
-<#      foreach (var type in types) { 
-        #>
-        /// <summary>
-        /// Check if the first <see cref="Hex<T>" /> is larger than the second.
-        /// </summary>
-        /// <param name="val1">first coordinate</param>
-        /// <param name="val2">second coordinate</param>
-        /// <returns>comparison result</returns>
-        public static bool Larger(Hex<<#= type.Name #>> val1, Hex<<#= type.Name #>> val2) 
-        {
-            return val1.X > val2.X 
-                && val1.Y > val2.Y 
-                && val1.Z > val2.Z;
-        }
-<#
-        } #>
-<#      foreach (var type in types) { 
-        #>
-        /// <summary>
-        /// Check if the first <see cref="Hex<T>" /> is larger or equal than the second.
-        /// </summary>
-        /// <param name="val1">first coordinate</param>
-        /// <param name="val2">second coordinate</param>
-        /// <returns>comparison result</returns>
-        public static bool LargerOrEqual(Hex<<#= type.Name #>> val1, Hex<<#= type.Name #>> val2) 
-        {
-            return val1.X >= val2.X 
-                && val1.Y >= val2.Y 
-                && val1.Z >= val2.Z;
-        }
-<#
-        } #>
+
+        public static Hex<#= large #> FromDoubled((<#= small #> col, <#= small #> row) p, DoubledCoordinateSystem system)
+            => FromDoubled(p.col, p.row, system);
+                
+        public Hex<#= large #> Negate()
+            => new Hex<#= large #>(-X, -Y, -Z);
+        
+        public <#= small #> DistanceTo(Hex<#= large #> other)
+            => (Math.Abs(X - other.X) + Math.Abs(Y - other.Y) + Math.Abs(Z - other.Z)) / 2;
+
+        public static <#= small #> Distance(Hex<#= large #> left, Hex<#= large #> right)
+            => left.DistanceTo(right);
+        
+        public static Hex<#= large #> Zero { get; }
+
+        public static Hex<#= large #> operator +(Hex<#= large #> left, Hex<#= large #> right)
+            => new Hex<#= large #>(left.X + right.X, left.Y + right.Y, left.Z + right.Z);
+
+        public static Hex<#= large #> operator -(Hex<#= large #> left, Hex<#= large #> right)
+            => new Hex<#= large #>(left.X - right.X, left.Y - right.Y, left.Z - right.Z);
+
+        public static Hex<#= large #> operator -(Hex<#= large #> val)
+            => val.Negate();
+
+        public static Hex<#= large #> operator *(Hex<#= large #> val, <#= small #> scale)
+            => new Hex<#= large #>(val.X * scale, val.Y * scale, val.Z * scale);
+        
+        public static Hex<#= large #> operator *(<#= small #> scale, Hex<#= large #> val)
+            => val * scale;
+        
+        public static bool operator ==(Hex<#= large #> left, Hex<#= large #> right)
+            => left.X == right.X && left.Y == right.Y && left.Z == right.Z;
+
+        public static bool operator !=(Hex<#= large #> left, Hex<#= large #> right)
+            => !(left == right);
     }
-    
+<# } #>
 }
