@@ -1,0 +1,169 @@
+<#@ template language="C#" #>
+<#@ output extension=".cs" #>
+<#@ assembly name="System.Core" #>
+<# Type[] types = new[] {
+    typeof(Int16), typeof(Int32), typeof(Int64),
+    typeof(float), typeof(double), typeof(decimal),
+    };
+#>
+using System;
+
+namespace HexGrid
+{
+    public readonly partial struct Hex<T>
+        where T : struct
+    {
+<#      foreach (var type in types) { 
+        #>
+        /// <summary>
+        /// Add two <see cref="Hex<T>" /> coordinates together.
+        /// </summary>
+        /// <param name="val1">first coordinate</param>
+        /// <param name="val2">second coordinate</param>
+        /// <returns>result coordinate</returns>
+        public static Hex<<#= type.Name #>> Add(Hex<<#= type.Name #>> val1, Hex<<#= type.Name #>> val2) 
+        {
+            return new Hex<<#= type.Name #>>(
+                (<#= type.Name #>)(val1.X + val2.X),
+                (<#= type.Name #>)(val1.Y + val2.Y),
+                (<#= type.Name #>)(val1.Z + val2.Z)
+            );
+        }
+<#
+        } #>
+<#      foreach (var type in types) { 
+        #>
+        /// <summary>
+        /// Subtract the second <see cref="Hex<T>" /> coordinate from the first.
+        /// </summary>
+        /// <param name="val1">first coordinate</param>
+        /// <param name="val2">second coordinate</param>
+        /// <returns>result coordinate</returns>
+        public static Hex<<#= type.Name #>> Sub(Hex<<#= type.Name #>> val1, Hex<<#= type.Name #>> val2) 
+        {
+            return new Hex<<#= type.Name #>>(
+                (<#= type.Name #>)(val1.X - val2.X),
+                (<#= type.Name #>)(val1.Y - val2.Y),
+                (<#= type.Name #>)(val1.Z - val2.Z)
+            );
+        }
+<#
+        } #>
+<#      foreach (var type in types) { 
+        #>
+        /// <summary>
+        /// Negates a <see cref="Hex<T>" /> coordinates.
+        /// </summary>
+        /// <param name="val">coordinate</param>
+        /// <returns>result coordinate</returns>
+        public static Hex<<#= type.Name #>> Negate(Hex<<#= type.Name #>> val) 
+        {
+            return new Hex<<#= type.Name #>>(
+                (<#= type.Name #>)(-val.X),
+                (<#= type.Name #>)(-val.Y),
+                (<#= type.Name #>)(-val.Z)
+            );
+        }
+<#
+        } #>
+<#      foreach (var type in types) { 
+        #>
+        /// <summary>
+        /// Negates a <see cref="Hex<T>" /> coordinates.
+        /// </summary>
+        /// <param name="val">coordinate</param>
+        /// <param name="scale">scale factor</param>
+        /// <returns>result coordinate</returns>
+        public static Hex<<#= type.Name #>> Scale(Hex<<#= type.Name #>> val, <#= type.Name #> scale) 
+        {
+            return new Hex<<#= type.Name #>>(
+                (<#= type.Name #>)(val.X * scale),
+                (<#= type.Name #>)(val.Y * scale),
+                (<#= type.Name #>)(val.Z * scale)
+            );
+        }
+<#
+        } #>
+<#      foreach (var type in types) { 
+        #>
+        /// <summary>
+        /// Check if two <see cref="Hex<T>" /> are equal.
+        /// </summary>
+        /// <param name="val1">first coordinate</param>
+        /// <param name="val2">second coordinate</param>
+        /// <returns>comparison result</returns>
+        public static bool Equal(Hex<<#= type.Name #>> val1, Hex<<#= type.Name #>> val2) 
+        {
+            return val1.X == val2.X 
+                && val1.Y == val2.Y 
+                && val1.Z == val2.Z;
+        }
+<#
+        } #>
+<#      foreach (var type in types) { 
+        #>
+        /// <summary>
+        /// Check if the first <see cref="Hex<T>" /> is less than the second.
+        /// </summary>
+        /// <param name="val1">first coordinate</param>
+        /// <param name="val2">second coordinate</param>
+        /// <returns>comparison result</returns>
+        public static bool Less(Hex<<#= type.Name #>> val1, Hex<<#= type.Name #>> val2) 
+        {
+            return val1.X < val2.X 
+                && val1.Y < val2.Y 
+                && val1.Z < val2.Z;
+        }
+<#
+        } #>
+<#      foreach (var type in types) { 
+        #>
+        /// <summary>
+        /// Check if the first <see cref="Hex<T>" /> is less or equal than the second.
+        /// </summary>
+        /// <param name="val1">first coordinate</param>
+        /// <param name="val2">second coordinate</param>
+        /// <returns>comparison result</returns>
+        public static bool LessOrEqual(Hex<<#= type.Name #>> val1, Hex<<#= type.Name #>> val2) 
+        {
+            return val1.X <= val2.X 
+                && val1.Y <= val2.Y 
+                && val1.Z <= val2.Z;
+        }
+<#
+        } #>
+<#      foreach (var type in types) { 
+        #>
+        /// <summary>
+        /// Check if the first <see cref="Hex<T>" /> is larger than the second.
+        /// </summary>
+        /// <param name="val1">first coordinate</param>
+        /// <param name="val2">second coordinate</param>
+        /// <returns>comparison result</returns>
+        public static bool Larger(Hex<<#= type.Name #>> val1, Hex<<#= type.Name #>> val2) 
+        {
+            return val1.X > val2.X 
+                && val1.Y > val2.Y 
+                && val1.Z > val2.Z;
+        }
+<#
+        } #>
+<#      foreach (var type in types) { 
+        #>
+        /// <summary>
+        /// Check if the first <see cref="Hex<T>" /> is larger or equal than the second.
+        /// </summary>
+        /// <param name="val1">first coordinate</param>
+        /// <param name="val2">second coordinate</param>
+        /// <returns>comparison result</returns>
+        public static bool LargerOrEqual(Hex<<#= type.Name #>> val1, Hex<<#= type.Name #>> val2) 
+        {
+            return val1.X >= val2.X 
+                && val1.Y >= val2.Y 
+                && val1.Z >= val2.Z;
+        }
+<#
+        } #>
+    }
+    
+}
